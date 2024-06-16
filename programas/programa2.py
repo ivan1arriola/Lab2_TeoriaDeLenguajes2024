@@ -7,7 +7,7 @@ import ssl
 
 #ssl._create_default_https_context = ssl._create_unverified_context
 #nltk.download('punkt')
-from nltk.tree import *
+
 
 grammarInfija = """
 S -> S Operador S | '(' S ')' | Numero
