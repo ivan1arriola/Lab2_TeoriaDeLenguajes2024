@@ -5,8 +5,8 @@ import io
 import nltk
 import ssl
 
-#ssl._create_default_https_context = ssl._create_unverified_context
-#nltk.download('punkt')
+ssl._create_default_https_context = ssl._create_unverified_context
+nltk.download('punkt')
 
 # grammar definition
 grammar = """
@@ -26,45 +26,53 @@ def parse(s, grammar):
         
     # parser
     grammar = nltk.CFG.fromstring(grammar)
-    parser = nltk.LeftCornerChartParser(grammar)
-    
+    # parser = nltk.LeftCornerChartParser(grammar)
+    parser = nltk.ChartParser(grammar)
+
     # tokenize
     s_tokenized = nltk.word_tokenize(s)
 
     # parse
+    # tree =  #[:1]
     tree = list(parser.parse(s_tokenized))[:1]
     return tree
   
 # recibe un string perteneciente al lenguaje de grammar1 y lo traduce en un string perteneciente a grammar2 y lo retorna
-def traducir(s, grammar1, grammar2):
+def traducir(tree):
 
-  tree = parse(s, grammar1)
+    if tree.label() == 'S':
+      if len(tree) == 3:
+        left = traducir(tree[0])
+        right = traducir(tree[2])
+        op = traducir(tree[1])
+        return f"{op}({left},{right})"
+    elif len(tree) == 1:
+      return traducir(tree[0])
+    elif tree.label() == 'N':
+      return tree[0]
+    elif tree.label() in ['+', '-', '*', '/']:
+      return tree[0]
   
-  if not tree:
-      return None
-  
-
-        
-        
-  
-  return translated_string
+    return None
 
 if __name__ == '__main__':
     archivo_entrada = sys.argv[1]
     archivo_salida = sys.argv[2]
     f = io.open(archivo_entrada, 'r', newline='\n', encoding='utf-8')
-    s = f.read()
-    f.close()
+    s = f.read().strip()
+  
     try:
       tree = parse(s, grammar)
       
       if tree:
-          salida = traducir(s, grammar, grammar2)
-          print(tree)
+          tree = tree[0] # primer árbol de parseo
+          salida = traducir(tree)
       else:
           salida = "NO PERTENECE"
     except ValueError:
       salida = "NO PERTENECE - FUERA DE ALFABETO"
-    f = io.open(archivo_salida, 'w', newline='\n', encoding='utf-8')
-    f.write(salida)
-    f.close()
+    # f = io.open(archivo_salida, 'w', newline='\n', encoding='utf-8')
+    # f.write(salida)
+    # f.close()
+    with io.open(archivo_salida, 'w', newline='\n', encoding='utf-8') as f:
+        f.write(salida)
